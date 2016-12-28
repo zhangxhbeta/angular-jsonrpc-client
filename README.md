@@ -1,14 +1,18 @@
 [![Build Status](https://travis-ci.org/joostvunderink/angular-jsonrpc-client.svg?branch=master)](https://travis-ci.org/joostvunderink/angular-jsonrpc-client)
 
-# Introduction
+# 背景知识
 
 angular-jsonrpc-client provides a configurable client to perform [JSON-RPC 2.0][JSONRPC2] calls via HTTP to one or more servers.
+
+angular-jsonrpc-client 提供可配置的客户端去执行  [JSON-RPC 2.0][JSONRPC2] 请求，并支持配置多个服务器端点
 
 [JSONRPC2]: http://www.jsonrpc.org/specification
 
 JSON-RPC is a protocol where you send a JSON object with a method name and method parameters to a server, and you get a response with the result of the operation. Let's say you send the following JSON:
 
-```
+JSON-RPC 是一种让你通过发送 JSON 对象，通过方法、方法参数传送给服务端，然后获取服务端的响应结果。比如下面就是一个常见的发送请求：
+
+```json
     {
         "jsonrpc": "2.0",
         "id": "1",
@@ -22,7 +26,9 @@ JSON-RPC is a protocol where you send a JSON object with a method name and metho
 
 The server might reply with an object like this:
 
-```
+服务器返回这样：
+
+```json
     {
         "jsonrpc": "2.0",
         "id": "1",
@@ -34,7 +40,9 @@ The server might reply with an object like this:
 
 Or, if an error happens, the server would reply with an object like this:
 
-```
+如果服务器发生错误，可能会返回给你这样的结果：
+
+```json
     {
         "jsonrpc": "2.0",
         "id": "1",
@@ -50,20 +58,27 @@ Or, if an error happens, the server would reply with an object like this:
 
 In addition to such a JSON-RPC server error, it could also happen that something goes wrong with sending the request to the server. For example, the server could be down, or the client could be configured with the wrong location of the server. In that case, you would also experience an error situation, although different from JSON-RPC errors.
 
-# Description
+JSON-RPC 服务器出错是常事，在客户端发送的过程中也可能会出错。比如，服务器不在线，或者客户端配错了服务器地址。这种情况下也会给你一个错误。
+
+# 介绍
 
 This client takes care of the communication and the error handling when communicating with a JSON-RPC server. By default it returns a `$q` promise, which either resolves to a result value via `.then()` or results in an error via `.catch()`.
 
+这个客户端负责与 JSON-RPC 服务器的通讯与错误处理。默认情况下处理完后返回 `$q` promise，promise 要么成功，调用 `.then()` 或者出错，调用 `.catch()`
+
 Currently, it can only handle JSON-RPC servers that are reachable via HTTP.
+
+现在这个客户端还只支持通过 HTTP 的 JSON-RPC 
 
 The client is configured in the Angular configuration phase via the `jsonrpcConfig` provider, and the client itself is injected as `jsonrpc`.
 
-# Getting started
+本客户端在 Angular 配置阶段提供 `jsonrpcConfig` provider 对象，客户端本身注入为 `jsonrpc`
 
-```
-// For a single JSON-RPC server:
-// (this way of configuring is simple and only recommended for the most
-// basic usage)
+# 开始动手吧 
+
+```javascript
+// 单一服务器配置:
+// (大部分情况下这样的配置没问题)
 angular
     .module('MyApp', ['angular-jsonrpc-client'])
     .config(function(jsonrpcConfigProvider) {
@@ -81,7 +96,7 @@ angular
             });
     }]);
 
-// Or for multiple JSON-RPC servers
+// 或者看看这里，多服务器配置
 angular
     .module('MyApp', ['angular-jsonrpc-client'])
     .config(function(jsonrpcConfigProvider) {
@@ -110,20 +125,21 @@ angular
                 $scope.error = error;
             });
     }]);
-
 ```
 
-# Configuration
+# 配置
 
-There are 3 configuration options.
+3个可配置项
 
-Argument | Mandatory? | Type | Default | Description
----------|------------|------|---------|------------
-url | optional | string | null | The URL of the JSON-RPC HTTP server.
-servers | optional | array | null | A list of backend servers with names.
-returnHttpPromise | optional | boolean | false | Whether to return a `$http` promise or a `$q` promise.
+| 参数                | 是否可选 | 类型      | 默认值   | 描述                                      |
+| ----------------- | ---- | ------- | ----- | --------------------------------------- |
+| url               | 可选   | string  | null  | JSON-RPC HTTP 服务器的地址.                   |
+| servers           | 可选   | array   | null  | 多个服务器的配置.                               |
+| returnHttpPromise | 可选   | boolean | false | 是否返回一个 `$http` promise 或者 `$q` promise. |
 
 You must provide either `url` or `servers` to configure which backend(s) will be used. If you provide the `url` argument, a single backend called `main` will be created internally.
+
+ `url` 和 `servers`  必须配置一个。如果只配置 `url`  参数，会默认创建一个叫 `main` 的服务器配置
 
 The argument `url` is a string with the URL of the JSON-RPC server.
 
@@ -131,9 +147,11 @@ The argument `servers` is an array of objects. Each object contains three keys: 
 
 The argument `returnHttpPromise` can be used to return a `$http` promise instead of a `$q` promise, if you want to handle the $http errors yourself. See the [Http Promise](#http-promise) section for more information.
 
-# Calling `jsonrpc.request()`
+# 调用 `jsonrpc.request()`
 
 The method `jsonrpc.request()` can be called with 1, 2 or 3 arguments:
+
+`jsonrpc.request()` 可以最多有 3 个参数
 
 `jsonrpc.request(requestObject)`
 
@@ -143,18 +161,24 @@ The method `jsonrpc.request()` can be called with 1, 2 or 3 arguments:
 
 If it's called with 2 arguments, the serverName is set to `main` internally. This is the same internal name as when you call jsonrpcConfig with the `url` parameter.
 
+如果提供 2 个参数，那么 serverName 会被设置为 `main`，就像前面说的配置 `url`一样
+
 If called with 1 argument, you can use the following keys:
 
-Key | Description
-----|------------
-serverName | The name of the server
-methodName | The method
-methodArgs | Arguments of the method call
-config     | An object with key/value pairs that will be passed to $http
+如果提供 1 个参数的对象，那么可以用下面这些 key
 
-# Setting headers at run-time
+| Key        | Description       |
+| ---------- | ----------------- |
+| serverName | 服务器名字             |
+| methodName | 方法名               |
+| methodArgs | 方法的参数（数组）         |
+| config     | 提供一个传递给 $http 的对象 |
+
+# 运行中设置请求头
 
 Sometimes, you don't have the authentication headers during the Angular configuration phase yet, for example because you will only receive them as result of a "log in" JSON-RPC call. It is possible to add headers later on, via `jsonrpc.setHeaders(serverName, headers)`. For example:
+
+有时候你想设置一个认证头，可能在 Angular 配置阶段不合适，因为你还没有登录。但是不要担心，在登录成功后你可以这样设置，通过 `jsonrpc.setHeaders(serverName, headers)`. 比如下面例子：
 
 ```
 jsonrpc.setHeaders('main', {
@@ -162,11 +186,13 @@ jsonrpc.setHeaders('main', {
 });
 ```
 
-# JSONRPC Batch Request
+# JSONRPC 批量处理
 
 To send several Request objects at the same time, the Client may send an Array filled with Request objects.
 
-## Calling `jsonrpc.batch()`
+如果你想把几个 Request 对象一起发送，可以通过下面的方法
+
+## 调用 `jsonrpc.batch()`
 
 The method `jsonrpc.batch()` can be called with either 0 or with 1 argument:
 
@@ -178,26 +204,32 @@ If it's called with 0 arguments, the serverName is set to `main` internally. Thi
 
 The method returns a new `batch` object.
 
-## Using the batch request
+## 使用 batch 请求
 
 To use the batch request, you have to create a new batch object with `jsonrpc.batch()`. You can add new requests with `batch.add(methodName, args)` and send the batch request with `batch.send()`.
 
+首先要调用 `jsonrpc.batch()`  得到一个 batch 对象，然后通过 `batch.add(methodName, args)` 添加请求，然后通过 `batch.send()` 来发送请求
+
 The method `batch.add()` returns by default a `$q` promise like `jsonrpc.request()`. If you configure usage of `$http` promise the return value is the id of the request to identify the response.
+
+默认情况下 `batch.add()`  返回一个 `$q` promise，但如果你配置为返回 `$http`，这种情况下将返回一个请求的 id
 
 The method `batch.send()` returns just as `jsonrpc.request()` by default a `$q` promise. The result of the resolved `$q` promise isn't set. After calling `batch.send()` the batch data is cleared.
 
+方法  `batch.send()` 默认也是返回一个 `$q` promise，但是请注意这个 `$q`  resolve 时没有数据返回的。
+
 For example:
 ```
-    // Creating new batch
+    // 创建批量对象
     var batch = jsonrpc.batch();
     
-    // Adding requests to batch
+    // 添加请求（以及请求的处理 then）
     batch.add("foo.bar", [])
         .then(handleFooBar);
     batch.add("bar.foo", [])
         .then(handleBarFoo);
         
-    // Send batch request
+    // 发送批量请求
     batch.send()
         .then(handleSend);
 ```
