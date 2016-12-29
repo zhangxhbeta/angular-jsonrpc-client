@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/joostvunderink/angular-jsonrpc-client"
+    "url": "https://github.com/zhangxhbeta/angular-jsonrpc-client"
   },
   "scripts": {
     "test": "grunt test"
